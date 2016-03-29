@@ -49,8 +49,7 @@ function ERROR_HANDLER(error) {
   if (error && (typeof error === 'object') && error.message) {
     logger.log("\n--- ERROR ---\n")
       .error(error.message)
-      .trace(error)
-      .endl();
+      .trace(error);
   }
 }
 
