@@ -9,7 +9,7 @@ const browserify = require('browserify');
 const plumber = require('gulp-plumber');
 const source = require('vinyl-source-stream');
 const buffer = require('vinyl-buffer');
-const connect = require('gulp-connect');
+const server = require('./server');
 
 const kTRACE_ERRORS = false;
 const directories = {
@@ -65,7 +65,6 @@ function GULP_LESS() {
       cascade: true
     }))
     .pipe(gulp.dest(directories.lessExport))
-    .pipe(connect.reload());
 }
 
 // Browserify & Build
@@ -73,11 +72,7 @@ var build = function BUILD() {
   const bundle = watchify(browserify(directories.main, watchify.args));
 
   // Launch Test Server
-  connect.server({
-    root: [path.join(__dirname, directories.export)],
-    livereload: true,
-    port: 9080
-  });
+  server(9080);
 
   // Watch Less folders
   gulp.watch([path.join(directories.less, '*.*'), path.join(directories.lessIncludes, '*.*')], GULP_LESS);
@@ -90,7 +85,6 @@ var build = function BUILD() {
       .pipe(source(directories.bundleName))
       .pipe(buffer())
       .pipe(gulp.dest(directories.export))
-      .pipe(connect.reload());
   }
   bundle.on('log', logger.log.bind(logger));
   bundle.on('update', rebundle);
