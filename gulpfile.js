@@ -90,7 +90,6 @@ var build = function BUILD() {
       .pipe(plumber(ERROR_HANDLER))
       .pipe(source(directories.bundleName))
       .pipe(buffer())
-      .pipe(sourcemaps.init({ loadMaps: true }))
       .pipe(gulp.dest(directories.export))
       .pipe(connect.reload());
   }
