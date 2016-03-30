@@ -6,6 +6,8 @@ A demonstration web-based unix-esque CLI for interacting with devices/services s
 
 ------------
 
+<img src="./preview.png" />
+
 ## Getting started
 ### Service configuration
 In order to use Linked services (only Nest is available for this demo) configure `const NestClientID` in `./lib/Applications/Link.js` and `./server.js` to your [Nest developer's](https://developer.nest.com/) *Product ID* and set *Redirect URI* directly to the main page of the Web Interface.
