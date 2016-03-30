@@ -61,6 +61,7 @@ class LS extends Application {
 module.exports = LS;
 },{"../CLI/Application":7}],3:[function(require,module,exports){
 const Application = require('../CLI/Application');
+const NestClientID = "3b0cea1d-8ff8-405f-a673-57e8e41a4d7d";
 
 function capitalizeFirstLetter(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
@@ -77,12 +78,20 @@ class Link extends Application {
     this._frame = this._frame || $('<div class="frame"></div>');
     return this._frame; 
   }
+  /**
+   * @method awaitResponse
+   * @param {Terminal} terminal - an instance of Terminal View
+   * @param {string} token - OAuth2 client token
+   * @param {string} service - Service name (e.g. Nest)
+   * @description Awaits for an OAuth2 callback and restores application state
+   * to continue from the response
+   */
   awaitResponse(terminal, token, service) {
     // Create a new frame element
     const ConstructFrame = this._constructFrame.bind(this);
     const frame = ConstructFrame();
     
-    // Construct common terminate function
+    // Construct common terminate function (removes widget)
     const terminate = () => {
       // Reset terminal state to accept prompt
       terminal.setWorking(false);
@@ -110,29 +119,42 @@ class Link extends Application {
       // Set to working
       terminal.setWorking(true);
       terminal.setPromptActive(false);
+      // Print frame
       terminal.print(frame);
+      
       setTimeout(() => {
+        // Animate frame to indeterminate status
         frame.addClass('indeterminate status');
       }, 100);
+      // Set frame status text (this will probably disappear really fast depending on connection speed)
       frame.text(`Verifying OAuth2 Token with ${capitalizeFirstLetter(service || "service")}.`);
+      
+      // Connect to back-end and convert client token to access_token
       $.get({
         url: `/get_token/${service}?code=${token}`,
         dataType: "json",
         success: (response) => {
+          // Handle/Log response errors
           if (response.error) {
             frame.removeClass('indeterminate').addClass('error');
             frame.text(response.error);
             return terminate();
           }
+          // Parse access_token out of response
           let access_token = response.access_token;
+          // Set widget state to `success`
           frame.removeClass('indeterminate').addClass('success');
+          // Set widget status text
           frame.text(`Successfully linked to ${capitalizeFirstLetter(service || "service")}...`);
           
+          // Store access_token in Application storage
           this.store(`@Link::access_token::${service}`, access_token);
           
+          // Remove widget
           terminate();
         },
         error: function (xhr, status) {
+          // Handler/Log connection errors
           frame.removeClass('indeterminate').addClass('error');
           frame.text("Failed to connect");
           return terminate();
@@ -143,7 +165,7 @@ class Link extends Application {
   getHandler() {
     const OAuth2 = {
       nest: {
-        auth: "http://home.nest.com/login/oauth2?client_id=3b0cea1d-8ff8-405f-a673-57e8e41a4d7d&state=AWAIT:LINK:NEST"
+        auth: "http://home.nest.com/login/oauth2?client_id=" + NestClientID + "&state=AWAIT:LINK:NEST"
       }
     };
     const validServices = ['nest'];
@@ -172,10 +194,12 @@ class Link extends Application {
       this.setWorking(true);
       this.setPromptActive(false);
       
+      // Construct a new frame View
       const frame = ConstructFrame();
 
+      // Create a new Sandboxed Iframe
       const iframe = $('<iframe src="'+ OAuth2[service].auth +'" sandbox="allow-scripts allow-top-navigation allow-forms allow-same-origin"></iframe>');
-      let redirects = 0;
+      // iframe styling //
       iframe.css({
         width: 500,
         height: 500,
@@ -184,7 +208,11 @@ class Link extends Application {
       iframe.load(() => {
         iframe.animate({ width: 500, height: 550 });
       });
+      // -------------- //
+      
+      // Append iframe to frame
       frame.append(iframe);
+      // Print frame to Terminal View
       this.print(frame);
     };
   }
@@ -325,21 +353,50 @@ module.exports = [
   require('./CAT')
 ];
 },{"./CAT":1,"./LS":2,"./Link":3,"./Nest":4,"./Unlink":5}],7:[function(require,module,exports){
+// Simple No Operation (noop) function
 const noop = () => {};
 
+/**
+ * Creates a new application with storage, invocation & help
+ * @class Application
+ * 
+ * @description Applications are first-class commands in the Web command-line interface
+ * and are invoked with commands such as `ls -a` similar to a Unix CLI. Each application
+ * is responsible for attaching 3 variables to the instance in the constructor, `name`
+ * will represent application name and its command, `usage` describes a sample usage and
+ * `desc` describes the purpose of the application. A `handler` function is essential to
+ * the execution of the application and is a must but alternatively `getHandler` method
+ * can be overriden to return a handler function. A method `help` is an optional function
+ * for displaying the help context of the app and may be implemented internally.
+ */
 class Application {
   constructor() {
+    // Init handler
     this.handler = noop;  
   }
+  /* - SETTERS - */
   setHandler(func) {
     this.handler = func;
   }
+  /* - ------- - */
+  /**
+   * @method store
+   * @param {string} key
+   * @param {Object} value
+   * @description Stores a key, value combination in a namespaced part of localStorage
+   */
   store(key, value) {
     window.localStorage.setItem("@Terminal::Storage::" + key, JSON.stringify(value));
   }
+  /**
+   * @method fetch
+   * @param {string} key
+   * @description Fetches the value of a key from the namespaced storage
+   */
   fetch(key) {
     return JSON.parse(window.localStorage.getItem("@Terminal::Storage::" + key));
   }
+  /* - GETTERS - */
   getName() {
     return this.name;
   }
@@ -352,11 +409,20 @@ class Application {
   getDesc() {
     return this.desc;
   }
+  /* - ------- - */
+  /**
+   * @method call
+   * @param {array} argv - Argument vector similar to Unix's argv
+   * @param {Terminal} terminal - CLI View instance
+   * @description Passes a routed command to the handler function
+   */
   call(argv, terminal) {
     // Handle Help's special case
     if (((argv[1] || "").toLowerCase() === 'help') && (typeof this.help === 'function')) {
+      // Display help
       this.help(terminal);
     } else {
+      // Call handler
       this.getHandler().apply(terminal, argv);
     }
   }
@@ -365,22 +431,54 @@ class Application {
 module.exports = Application;
 },{}],8:[function(require,module,exports){
 (function (process){
+// Map & Polyfill
 const Map = require('../Utilities/Map')();
 
+/**
+ * High-level CLI controller that stores applications and interacts with Terminal View
+ * @class Controller
+ * 
+ * @description Controller is a manager that sits on top of Terminal View and powers
+ * applications and command routing. Applications are mapped and called according top
+ * their internal call method.
+ */
 class Controller {
   constructor() {
     this.map = new Map();
   }
+  /**
+   * @method register
+   * @param {Application} app - An instance of an application
+   * @description Maps an application based on `getName` method of that application
+   */
   register(app) {
     this.map.set(app.getName(), app);
     return app; 
   }
+  /**
+   * @method getApplication
+   * @param {string} name
+   * @description Returns instance of mapped application
+   */
   getApplication(name) {
     return this.map.get(name);
   }
+  /**
+   * @method listApplications
+   * @param {function} callback
+   * @description Calls the callback n number of times per each registered application
+   */
   listApplications(callback) {
     this.map.forEach(callback);
   }
+  /**
+   * @method process
+   * @param {Terminal} terminal - an instance of Terminal View
+   * @param {string} command - full command
+   * @description A simple command router that supports a `help` case. It parses arguments
+   * into an argument vector `argv` and routes the command to a corresponding application
+   * or logs an error.
+   */
   process(terminal, command) {
     // Parse argv
     let argv = command.split(' ');
@@ -521,6 +619,10 @@ module.exports = Controller;
  jQuery rewrite and overhaul
  Chromakode, 2010
  http://www.chromakode.com/
+ 
+ Improved by
+ Schahriar SaffarShargh <info@schahriar.com>, 2016
+ http://www.schahriar.com/
 */
 
 /**** start from http://snippets.dzone.com/posts/show/701 ****/
@@ -1198,6 +1300,8 @@ function bc(a,b){v(!b||!0===a||!1===a,"Can't turn on custom loggers persistently
 
 },{}],13:[function(require,module,exports){
 const Terminal = require('./CLI/Terminal.view.js');
+
+// Application Index, Imports all applications listed in './Applications/_index.js'
 const applications = require('./Applications/_index.js');
 
 // http://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
@@ -1228,20 +1332,28 @@ function getTimeString() {
 $(document).ready(function() {
   // Kill Opera's backspace keyboard action.
   document.onkeydown = document.onkeypress = function(e) { return $.hotkeys.specialKeys[e.keyCode] != 'backspace'; };
+  // Import every application in './Applications/_index.js'
   applications.forEach(function (App) {
     let app = new App();
+    // Terminal.output is our controller
+    // Register app with controller
     Terminal.output.register(app);
   });
+  // For Debugging purposes
   window.Terminal = Terminal;
   // Reload back to previous state from callbacks
   let state = (getParameterByName('state') || "").split(':');
+  // AWAIT Sequence, fundamental to OAuth2 callbacks
   if ((state.length > 1) && (state[0] === 'AWAIT')) {
+    // Parse application awaiting from the query
     let app = Terminal.output.getApplication(state[1].toLowerCase());
 
+    // Ensure application exists
     if (!app || (typeof app.awaitResponse !== 'function')) return;
     
     // Restore terminal state
     Terminal.restoreState();
+    // Call application's awaiting function
     app.awaitResponse(Terminal, getParameterByName('code'), state[2].toLowerCase());
   } else {
     
@@ -1253,6 +1365,7 @@ $(document).ready(function() {
     Terminal.print("------------------------------------------");
     Terminal.print("");
   }
+  // Initialize Terminal View
   Terminal.init();
 });
 },{"./Applications/_index.js":6,"./CLI/Terminal.view.js":10}],14:[function(require,module,exports){
