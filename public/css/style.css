@@ -5,14 +5,27 @@
 */
 html,
 body {
-  height: 99%;
+  height: 100%;
 }
 body {
   background-color: #000;
+  border-top: 4px solid #000;
   font-family: "Courier New", Courier, monospace;
-  margin: 0 15px;
+  padding: 10px 15px;
   overflow: hidden;
-  padding: 0;
+  margin: 0;
+}
+body.busy {
+  -webkit-animation-name: busy;
+          animation-name: busy;
+  -webkit-animation-duration: 2s;
+          animation-duration: 2s;
+  -webkit-animation-timing-function: linear;
+          animation-timing-function: linear;
+  -webkit-animation-iteration-count: infinite;
+          animation-iteration-count: infinite;
+  -webkit-animation-direction: alternate;
+          animation-direction: alternate;
 }
 pre,
 td,
@@ -23,11 +36,48 @@ div {
   font-family: "Courier New", Courier, monospace;
   font-size: 1em;
 }
+p {
+  word-wrap: break-word;
+}
 div#screen {
   height: 99%;
   margin: 2px;
   overflow: hidden;
   padding: 0;
+}
+div#screen .frame {
+  margin-top: 10px;
+  border-radius: 15px;
+  width: 500px;
+  height: 50px;
+  background-color: #fafafa;
+  -webkit-transition: height 0.2s ease, width 0.3s linear 0.2s, background-color 0.2s ease 0.3s;
+  transition: height 0.2s ease, width 0.3s linear 0.2s, background-color 0.2s ease 0.3s;
+}
+div#screen .frame.status {
+  width: 600px;
+  height: 30px;
+  line-height: 30px;
+  padding: 3px 16px;
+  margin: 18px 0;
+}
+div#screen .frame.indeterminate {
+  background-color: #F5DC54;
+  color: #222;
+}
+div#screen .frame.success {
+  background-color: #0C733A;
+  color: white;
+}
+div#screen .frame.error {
+  background-color: darkred;
+}
+div#screen .frame.flat {
+  background-color: transparent!important;
+  margin: 0!important;
+  padding: 0!important;
+  line-height: 1;
+  height: auto;
 }
 div,
 table {
@@ -151,22 +201,6 @@ div#indicators span {
   font-weight: bold;
   line-height: 0px;
 }
-div#cform {
-  height: 1px;
-  left: 0;
-  position: absolute;
-  top: 0;
-  width: 1px;
-}
-img {
-  color: #FFF;
-  font-size: x-small;
-}
-/* for broken images */
-img.comic {
-  background: white;
-  padding: 5px;
-}
 iframe {
   margin: 0;
   border: none;
@@ -189,17 +223,34 @@ form#searchform input[type=submit] {
   font-family: "Courier New", Courier, monospace;
   font-size: 1em;
 }
-div#credit {
-  position: absolute;
-  bottom: 0;
-  color: #FFF;
-  font-size: xx-small;
-  opacity: .25;
+span.green {
+  color: limegreen;
 }
-div#credit:hover {
-  opacity: .75;
+span.yellow {
+  color: yellow;
 }
-div#credit a {
-  font-size: xx-small;
-  text-decoration: underline;
+span.red {
+  color: darkred;
+}
+span.blue {
+  color: dodgerblue;
+}
+span.dim {
+  color: rgba(255, 255, 255, 0.5);
+}
+@-webkit-keyframes busy {
+  20% {
+    border-color: #31405D;
+  }
+  100% {
+    border-color: cyan;
+  }
+}
+@keyframes busy {
+  20% {
+    border-color: #31405D;
+  }
+  100% {
+    border-color: cyan;
+  }
 }
