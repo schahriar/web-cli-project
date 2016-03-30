@@ -37,7 +37,7 @@ Almost all information that is persistent is stored in the browser's `localstora
 ```
 
 ### Back-end token to access_token convertor
-A small API is provided at **GET** `get_token/:service` to convert tokens received by client auth to access_tokens. Client token is provided as query parameter `code`. An example of such request is:
+A small API is provided at **GET** `get_token/:service` to convert tokens received by client auth to access_tokens. You can take a look at the code in `server.js` file of the repository. Client token is provided as query parameter `code`. An example of such request is:
 ```
 GET - http://localhost:9080/get_token/nest?code=fxfd...
 ```
