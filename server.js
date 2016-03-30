@@ -2,7 +2,7 @@
 
 const express = require("express");
 const app = express();
-const request = require('request');
+let request = require('request');
 
 const NestClientID = "3b0cea1d-8ff8-405f-a673-57e8e41a4d7d";
 
@@ -19,8 +19,11 @@ const kServices = {
     }
 };
 
-module.exports = function SERVER(port) {
+module.exports = function SERVER(port, mock, callback) {
   const PORT = port || 8080;
+  
+  // Mock testing
+  if (process.env.NODE_ENV === 'test' && mock) request = mock; 
   
   // GET Route for converting OAuth2 codes to access_tokens
   app.get('/get_token/:service', function (req, res, next) {
@@ -60,6 +63,7 @@ module.exports = function SERVER(port) {
   
   // Listen on given or default port
   app.listen(PORT, () => {
+    if (typeof callback === 'function') callback(PORT);
     console.log(`Listening on port ${PORT}`);
   });
 };
