@@ -34,7 +34,7 @@ module.exports = function SERVER(port) {
     options.form.code = req.query.code;
 
     request(options, function (error, response, body) {
-      if (error) return res.json({ error: error });
+      if (error) return res.json({ error: error.message });
       
       // Parse request
       try {
