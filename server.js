@@ -4,13 +4,15 @@ const express = require("express");
 const app = express();
 const request = require('request');
 
+const NestClientID = "3b0cea1d-8ff8-405f-a673-57e8e41a4d7d";
+
 // Service options
 const kServices = {
   "nest": {
       method: "POST",
       url: "https://api.home.nest.com/oauth2/access_token",
       form: {
-        client_id: "3b0cea1d-8ff8-405f-a673-57e8e41a4d7d",
+        client_id: NestClientID,
         client_secret: process.env.NESTSECRET,
         grant_type: "authorization_code"
       }
