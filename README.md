@@ -2,7 +2,7 @@
 
 A demonstration web-based unix-esque CLI for interacting with devices/services such as Nest.
 
-*Note that the CLI rendering relies on code from the wonderful CLI [xkcdfools](https://github.com/chromakode/xkcdfools) but has been improved to provide a richer experience. *
+*Note that the CLI rendering relies on code from the wonderful CLI [xkcdfools](https://github.com/chromakode/xkcdfools) but has been improved to provide a richer experience.*
 
 ------------
 
@@ -20,15 +20,13 @@ npm start
 ```
 This will build the client code with **Browserify** and launch a development server on port 9080.
 
-----------------
-
 ## Design choices
 ### OAuth2 in iframes?!
-`sandboxd iframes` are used to handle inline widgets within the interface for OAuth2 authorization. As a developer I strongly advise to use popups to keep a great experience and equally be compliant to the specifications. I am not alone in with this opinion, [Nest's docs](https://developer.nest.com/documentation/cloud/authorization-overview) and the [OAuth v2 specs](http://tools.ietf.org/html/draft-ietf-oauth-v2-23#section-10.13) advise against the use of embedded frames. Regardless this is a demonstration project and would not have any real-world implications.
+`sandboxed iframes` are used to handle inline widgets within the interface for OAuth2 authorization. As a developer I strongly advise to use popups to keep a great experience and equally be compliant to the specifications. I am not alone in with this opinion, [Nest's docs](https://developer.nest.com/documentation/cloud/authorization-overview) and the [OAuth v2 specs](http://tools.ietf.org/html/draft-ietf-oauth-v2-23#section-10.13) advise against the use of embedded frames. Regardless this is a demonstration project and would not have any real-world implications.
 
 ### Localstorage as CLI storage
 Almost all information that is persistent is stored in the browser's `localstorage`. Information such as `access_token` and command history are examples of such stored objects. You can list and view them using `ls` and `cat` inspired by Unix FS:
-```
+```shell
 > ls
 @Terminal::Storage::@Link::access_token::nest
 
